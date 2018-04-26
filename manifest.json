@@ -1,0 +1,17 @@
+{ 
+	"name": "Hellodmostagram", 
+	"version": "1.0",
+	"manifest_version": 2 ,
+	"description": "Hello DMO Chrome Extension", 
+	"permissions": [
+		"https://*/*", "tabs", "webNavigation", "activeTab"
+	], 
+	"background": {
+		"scripts": ["background.js"]
+	}, 
+	"content_scripts": [ 
+		{
+		  "matches": [ "https://*/*" ],
+		  "js": ["content.js"]
+		}]
+}
