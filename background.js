@@ -42,6 +42,16 @@ function extractStatus(line) {
 	  console.log('Web Request status: ' + details.url + ' status: ' + status.code);
 	  if(status.code == '403') {
 		  // stop running.
+	  } else if (status.code == '404') {
+		  console.log('status was 404.... going back and continuing.');
+		chrome.tabs.update( tabId, { url: exploreUrl } , function() {
+			console.log('updated tab.');
+			setTimeout(function() { 
+				console.log('sending message to the browser to continue liking.');
+				chrome.tabs.sendMessage(tabId, {action: "continueliking", numberliked: numberliked, maxlikes: maxlikes }, function(response) {});  
+			}, 5000);
+		}); 
+		
 	  }
 	},
 	{urls: ["<all_urls>"]}

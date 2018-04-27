@@ -1,5 +1,17 @@
 var maxtolike = 2;
 
+chrome.runtime.onMessage.addListener(function(response) { 
+	if (response.message == 'continueliking') {
+		console.log('continuing to like...')
+		let firstItem = document.getElementsByClassName('_e3il2')[9];
+		if (firstItem) { 
+			firstItem.click()
+		}
+
+		setTimeout(() => likeandnext(response.numberliked, response.maxlikes));
+	}
+});
+
 function sendMessage(message) { 
 	if (chrome && chrome.runtime) { 
 		chrome.runtime.sendMessage(message)
@@ -55,7 +67,7 @@ function addButton() {
 		return;
 	}
 
-	var increments = [5, 50, 100, 250];
+	var increments = [5, 10, 25, 50, 100, 250];
 
 	let maindiv = document.createElement('div');
 	maindiv.style.position = 'fixed';
@@ -64,6 +76,7 @@ function addButton() {
 	maindiv.style.alignItems = 'left'
 	maindiv.style.whiteSpace = 'nowrap';
 	maindiv.style.display = 'inline-block';
+	maindiv.style.transform = 'scale(.5) translateX(-50%) translateY(-50%)';
 	maindiv.id = 'autorunDiv';
 
 	for (var i = 0; i < increments.length; i++) { 
