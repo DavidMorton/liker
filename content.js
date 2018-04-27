@@ -1,4 +1,13 @@
+var maxtolike = 2;
+
+function sendMessage(message) { 
+	if (chrome && chrome.runtime) { 
+		chrome.runtime.sendMessage(message)
+	}
+}
+
 function likeandnext(numberliked, maxlikes) { 
+	sendMessage({message: 'numberliked', numberliked: numberliked, maxlikes: maxlikes});
 	document.title = numberliked + ' - ' + new Date().toString().split(' ')[4];
 	let likeButton = document.getElementsByClassName('coreSpriteHeartOpen')[0];
 	let rightArrow = document.getElementsByClassName('coreSpriteRightPaginationArrow')[0]; 
@@ -8,8 +17,9 @@ function likeandnext(numberliked, maxlikes) {
 		 numberliked = numberliked + 1; 
 	} 
 
-	if (numberliked >= maxlikes) {
+	if (numberliked > maxlikes) {
 		document.title = 'DONE!'
+		sendMessage({ message: 'doneliking', numberliked: numberliked })
 		return;
 	}
 	
@@ -25,13 +35,13 @@ function likeandnext(numberliked, maxlikes) {
 	}, Math.floor(Math.random() * 1000 + 500));
 }
 
-function like() { 
+function like(maxtolike) { 
 	let firstItem = document.getElementsByClassName('_e3il2')[9];
 	if (firstItem) { 
 		firstItem.click()
 	}
 
-	setTimeout(() => likeandnext(0, 100), 1000);
+	setTimeout(() => likeandnext(0, maxtolike), 1000);
 }
 
 function addButton() { 
@@ -45,22 +55,39 @@ function addButton() {
 		return;
 	}
 
-	let div = document.createElement('div');
-	div.style.position = 'fixed';
-	div.style.top = '0px';
-	div.style.left = '0px';
-	div.style.margin = '20px';
-	div.style.padding = '10px';
-	div.innerText = 'Run'
-	div.style.backgroundColor = 'lightskyblue';
-	div.style.borderRadius = '5px';
-	div.id = 'autorunDiv';
+	var increments = [5, 50, 100, 250];
 
-	div.onclick = function() { 
-		like();
+	let maindiv = document.createElement('div');
+	maindiv.style.position = 'fixed';
+	maindiv.style.top = '0px';
+	maindiv.style.left = '0px';
+	maindiv.style.alignItems = 'left'
+	maindiv.style.whiteSpace = 'nowrap';
+	maindiv.style.display = 'inline-block';
+	maindiv.id = 'autorunDiv';
+
+	for (var i = 0; i < increments.length; i++) { 
+		let div = document.createElement('div');
+		div.style.margin = '10px';
+		div.style.padding = '8px';
+		div.innerText = '❤️ ' + increments[i]
+		div.style.backgroundColor = 'lightskyblue';
+		div.style.borderRadius = '5px';
+		div.style.cursor = 'pointer';
+		div.style.display = 'inline-block';
+
+		let increment = increments[i];
+
+		div.onclick = function() { 
+			sendMessage({message: 'liking', url: location.href});
+			like(increment);
+		}
+
+		maindiv.appendChild(div);
 	}
 
-	document.body.appendChild(div);
+	document.body.appendChild(maindiv)
+
 }
 
 let url = location.url;
@@ -70,7 +97,7 @@ setInterval(function() {
 		url = location.href
 		addButton();
 	}
-}, 100)
+}, 1000)
 
 
 

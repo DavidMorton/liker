@@ -4,14 +4,14 @@
 	"manifest_version": 2 ,
 	"description": "Hello DMO Chrome Extension", 
 	"permissions": [
-		"https://*/*", "tabs", "webNavigation", "activeTab"
+		"https://*/*", "tabs", "webNavigation", "activeTab", "webRequest", "https://*/*", "http://*/*"
 	], 
 	"background": {
 		"scripts": ["background.js"]
 	}, 
 	"content_scripts": [ 
 		{
-		  "matches": [ "https://*/*" ],
+		  "matches": [ "https://www.instagram.com/*" ],
 		  "js": ["content.js"]
 		}]
 }

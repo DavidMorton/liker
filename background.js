@@ -1,55 +1,65 @@
 var url = '';
 var numberliked = 0;
 var maxlikes = 150;
+var exploreUrl = '';
+var tabId = 0;
 
-function runSomething() { 
-	console.log('running something');
+
+function runSomething(url) { 
+	console.log('running something: ' + url);
 	chrome.runtime.sendMessage({message: 'background'});
 }
 
 
 chrome.runtime.onMessage.addListener(
-	function(response, callback) {
-		console.log('Received message from UI');
+	function(response, sender) {
+		if (response.message == 'liking') { 
+			console.log('Beginning to like starting with ' + response.url);
+			tabId = sender.tab.id;
+			exploreUrl = response.url;
+		} else if (response.message == 'numberliked') { 
+			console.log('content.js has reported ' + response.numberliked + ' likes. (aiming for ' + response.maxlikes + ')');
+			numberliked = response.numberliked;
+			maxlikes = response.maxlikes;
+		} else if (response.message == 'doneliking') { 
+			console.log('content.js has reported DONE ' + response.numberliked);
+			chrome.tabs.update( tabId, { url: exploreUrl } ); 
+		}
    });
 
-function likeandnext(numberliked) { 
-	document.title = numberliked + ' - ' + new Date().toString().split(' ')[4];
-	let likeButton = document.getElementsByClassName('coreSpriteHeartOpen')[0];
-	let rightArrow = document.getElementsByClassName('coreSpriteRightPaginationArrow')[0]; 
-
-	if (likeButton) { 
-		 likeButton.click(); 
-		 numberliked = numberliked + 1; 
-	} 
-
-	if (numberliked >= maxlikes) {
-		document.title = 'DONE!'
-		return;
+function extractStatus(line) {
+	var match = line.match(/[^ ]* (\d{3})/);
+	if(match) {
+	  return {code: match[1], message: match[2]};
+	} else {
+	  return undefined;
 	}
-	
-	setTimeout(function() { 
-		if (rightArrow) { 
-			rightArrow.click(); 
-			setTimeout(function() { 
-				likeandnext(numberliked); 
-			}, Math.floor(Math.random() * 3000 + 500));
-		} else { 
-			 document.title = 'ERROR!!!!';
-		} 
-	}, Math.floor(Math.random() * 1000 + 500));
-}
+  }
+  
+  chrome.webRequest.onHeadersReceived.addListener(
+	function(details) {
+	  var status = extractStatus(details.statusLine);
+	  console.log('Web Request status: ' + details.url + ' status: ' + status.code);
+	  if(status.code == '403') {
+		  // stop running.
+	  }
+	},
+	{urls: ["<all_urls>"]}
+  );
+
+chrome.webRequest.onErrorOccurred.addListener(function(details) { 
+	console.log('Error occurred!')
+}, {
+	urls: ["https://www.instagram.com/.*"]
+   });
 
 chrome.webNavigation.onCompleted.addListener(function(details) {
 	url = details.url;
 	numberliked = 0;
-	runSomething();
+	runSomething(url);
 }, {url: [{urlMatches : 'https://www.instagram.com/.*'}]});
 
 chrome.webNavigation.onHistoryStateUpdated.addListener(function(details) { 
-
-	
-	
 
 	if (details.frameId == 0) {
 		if (url == details.url) { 
@@ -58,6 +68,6 @@ chrome.webNavigation.onHistoryStateUpdated.addListener(function(details) {
 
 		url = details.url;
 
-		runSomething();
+		runSomething(url);
 	}
 }, {url: [{urlMatches : 'https://www.instagram.com/.*'}]});
