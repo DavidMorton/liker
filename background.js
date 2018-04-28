@@ -27,7 +27,7 @@ function numberBetween(min, max) {
 }
 
 function runautomatically() { 
-	if (parseInt(new Date().toString().split(' ')[4].split(':')[0]) > 20) { 
+	if (parseInt(new Date().toString().split(' ')[4].split(':')[0]) > 21) { 
 		// wait for about 8 hours or so....
 		let waitTime = numberBetween(60*7*1000, 60*9*1000);
 		setTimeout(function() { runAutomatically() }, waitTime);
