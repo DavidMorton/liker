@@ -20,16 +20,18 @@ var tags = ['architecture',
 'moodygrams', 
 'visualambassadors', 
 'agameoftones', 
-'artofvisuals']
+'artofvisuals', 
+'createcommune',
+'shotzdelight']
 
 function numberBetween(min, max) {
 	return Math.floor(Math.random() * (max-min) + min);
 }
 
 function runautomatically() { 
-	if (parseInt(new Date().toString().split(' ')[4].split(':')[0]) > 21) { 
+	if (parseInt(new Date().toString().split(' ')[4].split(':')[0]) > 22) { 
 		// wait for about 8 hours or so....
-		let waitTime = numberBetween(60*7*1000, 60*9*1000);
+		let waitTime = numberBetween(60*6*1000, 60*8*1000);
 		setTimeout(function() { runAutomatically() }, waitTime);
 		return;
 	}
@@ -42,7 +44,7 @@ function runautomatically() {
 		setTimeout(function() { 
 			console.log('sending message to the browser to continue liking.');
 			numberliked = 0;
-			maxlikes = numberBetween(50, 125);
+			maxlikes = numberBetween(75, 125);
 			chrome.tabs.sendMessage(tabId, {action: "continueliking", numberliked: numberliked, maxlikes: maxlikes }, function(response) {});  
 		}, 5000);
 	});
@@ -71,7 +73,10 @@ chrome.runtime.onMessage.addListener(
 				chrome.tabs.update( tabId, { url: exploreUrl } ); 
 			}
 			else { 
-				setTimeout(function() { runautomatically() }, numberBetween(45*60*1000, 90*60*1000));
+				let nextRun = numberBetween(45*60*1000, 75*60*1000);
+				let date = new Date(new Date().valueOf() + nextRun).toString().split(' ')[4];
+				chrome.tabs.sendMessage(tabId, {action: "nextrun", lastcount: response.numberliked, nextruntime: date }, function(response) {});  
+				setTimeout(function() { runautomatically() }, nextRun);
 			}
 		} else if (response.message == 'autorun') { 
 			autolike = true;
@@ -96,7 +101,7 @@ function extractStatus(line) {
 	  console.log('Web Request status: ' + details.url + ' status: ' + status.code);
 	  if(status.code == '403') {
 		  // stop running.
-	  } else if (status.code == '404') {
+	  } else if (status.code == '404' || status.code == '503') {
 		  console.log('status was 404.... going back and continuing.');
 		chrome.tabs.update( tabId, { url: exploreUrl } , function() {
 			console.log('updated tab.');

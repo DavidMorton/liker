@@ -10,6 +10,8 @@ chrome.runtime.onMessage.addListener(function(response) {
 		}
 
 		setTimeout(function() { likeandnext(response.numberliked, response.maxlikes) }, 5000);
+	} else if (response.action == 'nextrun') { 
+		document.title = "Liked " + response.lastcount + '. Sched: ' + response.nextruntime;
 	}
 });
 

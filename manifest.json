@@ -2,16 +2,16 @@
 	"name": "Hellodmostagram", 
 	"version": "1.0",
 	"manifest_version": 2 ,
-	"description": "Hello DMO Chrome Extension", 
+	"description": "Instalike!", 
 	"permissions": [
-		"https://*/*", "tabs", "webNavigation", "activeTab", "webRequest", "https://*/*", "http://*/*"
+		"tabs", "webNavigation", "activeTab", "webRequest", "*://*/*", "*://*/*"
 	], 
 	"background": {
 		"scripts": ["background.js"]
 	}, 
 	"content_scripts": [ 
 		{
-		  "matches": [ "https://www.instagram.com/*" ],
+		  "matches": [ "https://www.instagram.com/explore/*" ],
 		  "js": ["content.js"]
 		}]
 }
