@@ -140,13 +140,10 @@ setInterval(function() {
 }, 1000)
 
 
+document.addEventListener('DOMContentLoaded', function () { 
+	var buttons = document.querySelectorAll('button');
 
-// chrome.tabs.query({'active': true, 'lastFocusedWindow': true}, function (tabs) {
-// 	var url = tabs[0].url;
-// 	var regexp = new RegExp(/https:\/\/www\.instagram\.com\/explore\/.*/)
-// 	if (url.match(regexp)) { 
-// 		addButton();
-// 	}
-// });
-
-
+	for (var i = 0; i < buttons.length; i++) {
+		buttons[i].addEventListener('click', function() { sendMessage({message:'autorun'}); });
+	}
+});

@@ -32,7 +32,12 @@ function runautomatically() {
 	if (parseInt(new Date().toString().split(' ')[4].split(':')[0]) > 22) { 
 		// wait for about 8 hours or so....
 		let waitTime = numberBetween(60*6*1000, 60*8*1000);
-		setTimeout(function() { runAutomatically() }, waitTime);
+
+		chrome.alarms.create('runAutomatically', { 
+			delayInMinutes: (waitTime / 1000) / 60
+		})
+
+		//setTimeout(function() { runAutomatically() }, waitTime);
 		return;
 	}
 
@@ -41,19 +46,37 @@ function runautomatically() {
 
 	chrome.tabs.update( tabId, { url: exploreUrl } , function() {
 		console.log('updated tab.');
-		setTimeout(function() { 
-			console.log('sending message to the browser to continue liking.');
-			numberliked = 0;
-			maxlikes = numberBetween(75, 125);
-			chrome.tabs.sendMessage(tabId, {action: "continueliking", numberliked: numberliked, maxlikes: maxlikes }, function(response) {});  
-		}, 5000);
+
+		chrome.alarms.create('startliking', {
+			delayInMinutes: 5.0/60
+		})
+
+		// setTimeout(function() { 
+		// 	console.log('sending message to the browser to continue liking.');
+		// 	numberliked = 0;
+		// 	maxlikes = numberBetween(75, 125);
+		// 	chrome.tabs.sendMessage(tabId, {action: "continueliking", numberliked: numberliked, maxlikes: maxlikes }, function(response) {});  
+		// }, 5000);
 	});
 }
 
-function runSomething(url) { 
-	console.log('running something: ' + url);
-	chrome.runtime.sendMessage({message: 'background'});
-}
+chrome.alarms.onAlarm.addListener(function(alarm) {
+	switch (alarm.name) { 
+		case 'runAutomatically': 
+			runautomatically();
+			break;
+		case 'startliking': 
+			console.log('sending message to the browser to continue liking.');
+			numberliked = 0;
+			maxlikes = numberBetween(75, 125);
+			chrome.tabs.sendMessage(tabId, {action: "continueliking", numberliked: numberliked, maxlikes: maxlikes }, function(response) {}); 
+			break; 
+		case 'continueliking': 
+			console.log('sending message to the browser to continue liking.');
+			chrome.tabs.sendMessage(tabId, {action: "continueliking", numberliked: numberliked, maxlikes: maxlikes }, function(response) {});  
+			break;
+	}
+})
 
 
 chrome.runtime.onMessage.addListener(
@@ -75,14 +98,19 @@ chrome.runtime.onMessage.addListener(
 			else { 
 				let nextRun = numberBetween(45*60*1000, 75*60*1000);
 				let date = new Date(new Date().valueOf() + nextRun).toString().split(' ')[4];
-				chrome.tabs.sendMessage(tabId, {action: "nextrun", lastcount: response.numberliked, nextruntime: date }, function(response) {});  
-				setTimeout(function() { runautomatically() }, nextRun);
+				chrome.tabs.sendMessage(tabId, {action: "nextrun", lastcount: response.numberliked, nextruntime: date }, function(response) {}); 
+				chrome.alarms.create('runAutomatically', {
+					delayInMinutes: (nextRun / 1000) / 60
+				}) 
+				//setTimeout(function() { runautomatically() }, nextRun);
 			}
 		} else if (response.message == 'autorun') { 
 			autolike = true;
 			console.log('automatic run');
-			tabId = sender.tab.id;
-			runautomatically();
+			chrome.tabs.getSelected(null, function(tab) {
+				tabId = tab.id;
+				runautomatically();
+			});
 		}
    });
 
@@ -105,28 +133,19 @@ function extractStatus(line) {
 		  console.log('status was 404.... going back and continuing.');
 		chrome.tabs.update( tabId, { url: exploreUrl } , function() {
 			console.log('updated tab.');
-			setTimeout(function() { 
-				console.log('sending message to the browser to continue liking.');
-				chrome.tabs.sendMessage(tabId, {action: "continueliking", numberliked: numberliked, maxlikes: maxlikes }, function(response) {});  
-			}, 5000);
+			chrome.alarms.create('continueliking', {
+				delayInMinutes: 5.0/60
+			})
+
+			// setTimeout(function() { 
+				
+			// }, 5000);
 		}); 
 		
 	  }
 	},
 	{urls: ["<all_urls>"]}
   );
-
-chrome.webRequest.onErrorOccurred.addListener(function(details) { 
-	console.log('Error occurred!')
-}, {
-	urls: ["https://www.instagram.com/.*"]
-   });
-
-chrome.webNavigation.onCompleted.addListener(function(details) {
-	url = details.url;
-	numberliked = 0;
-	runSomething(url);
-}, {url: [{urlMatches : 'https://www.instagram.com/.*'}]});
 
 chrome.webNavigation.onHistoryStateUpdated.addListener(function(details) { 
 
@@ -136,7 +155,5 @@ chrome.webNavigation.onHistoryStateUpdated.addListener(function(details) {
 		} 
 
 		url = details.url;
-
-		runSomething(url);
 	}
 }, {url: [{urlMatches : 'https://www.instagram.com/.*'}]});
