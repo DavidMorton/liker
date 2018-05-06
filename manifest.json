@@ -7,17 +7,17 @@
 		"tabs", "webNavigation", "activeTab", "alarms", "webRequest", "*://*/*", "*://*/*"
 	], 
 	"browser_action": {
-		"default_icon": "heart.png",
+		"default_icon": "img/heart.png",
 		"default_title": "Liking!",
-		"default_popup": "popup.html"
+		"default_popup": "source/popup/popup.html"
 	},
 	"background": {
-		"scripts": ["background.js"], 
+		"scripts": ["source/background/background.js"], 
 		"persistent": true
 	}, 
 	"content_scripts": [ 
 		{
 		  "matches": [ "https://www.instagram.com/explore/*" ],
-		  "js": ["content.js"]
+		  "js": ["source/content/content.js"]
 		}]
 }
