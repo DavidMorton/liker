@@ -8,6 +8,7 @@ document.addEventListener('DOMContentLoaded', function () {
 	var buttons = document.querySelectorAll('button');
 
 	for (var i = 0; i < buttons.length; i++) {
-		buttons[i].addEventListener('click', function() { sendMessage({message:'autorun'}); });
+		let message = buttons[i].value;
+		buttons[i].addEventListener('click', function() { sendMessage({message:message}); });
 	}
 });

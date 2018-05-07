@@ -1,6 +1,7 @@
 var maxtolike = 2;
-var skipsBeforeGivingUp = 10;
+var skipsBeforeGivingUp = 30;
 var skipped = 0;
+var received429 = false;
 
 chrome.runtime.onMessage.addListener(function(response) { 
 	if (response.action == 'continueliking') {
@@ -13,6 +14,10 @@ chrome.runtime.onMessage.addListener(function(response) {
 		setTimeout(function() { likeandnext(response.numberliked, response.maxlikes) }, 5000);
 	} else if (response.action == 'nextrun') { 
 		document.title = "Liked " + response.lastcount + '. Sched: ' + response.nextruntime;
+	} else if (response.action == 'findUnfollowers') { 
+		listAllFollowers();
+	} else if (response.action == 'stopGettingUnfollowers') {
+		received429 = true;
 	}
 });
 
@@ -24,6 +29,74 @@ function sendMessage(message) {
 	if (chrome && chrome.runtime) { 
 		chrome.runtime.sendMessage(message)
 	}
+}
+
+var attemptsWithoutChange = 0;
+var followers = [];
+var following = [];
+
+function scrollThroughFollowers(callback) { 
+	if (received429) { 
+		alert('Can\'t get unfollowers. It seems Instagram thinks you\'re doing this too often.');
+		received429 = false;
+		return;
+	}
+
+	let box = document.getElementsByClassName('_gs38e')[0];
+	let scrollTop = box.scrollTop;
+	box.scrollTop = box.scrollHeight - box.clientHeight;
+
+	if (scrollTop == box.scrollTop) { 
+		attemptsWithoutChange = attemptsWithoutChange + 1;
+	} else { 
+		attemptsWithoutChange = 0;
+	}
+
+	if (attemptsWithoutChange >= 10) {
+		var result = [].slice.call(document.getElementsByClassName('_2g7d5')).map(function(x) { return x.innerText; })
+		setTimeout(function() { callback(result); }, 2500);
+	} else { 
+		setTimeout(function() { scrollThroughFollowers(callback); }, numberBetween(1250, 1750));
+	}
+}
+
+function listAllFollowers() { 
+	received429 = false;
+	let profileButton = document.getElementsByClassName('coreSpriteDesktopNavProfile')[0];
+	if (profileButton) { 
+		profileButton.click();
+		setTimeout(function() { 
+			let followersButton = [].slice.call(document.getElementsByClassName('_t98z6')).filter(function(x) { return x.innerText.indexOf('followers') > -1})[0];
+			if (followersButton) { 
+				followersButton.click();
+				setTimeout(function() { scrollThroughFollowers(listAllFollowing); }, 2500);
+			}
+		}, 2500)
+	}
+}
+
+function listAllFollowing(result) {
+	followers = result; 
+	document.getElementsByClassName('_pfyik')[0].click();
+
+	setTimeout(function() { 
+		let followingButton = [].slice.call(document.getElementsByClassName('_t98z6')).filter(function(x) { return x.innerText.indexOf('following') > -1})[0];
+		if (followingButton) { 
+			followingButton.click();
+			setTimeout(function() { scrollThroughFollowers(reconcileAll); }, 2500);
+		}
+	}, 2500);
+}
+
+function reconcileAll(result) {
+	following = result;
+
+	let unfollowers = following.filter(function(x) { return followers.indexOf(x) == -1; });
+	console.log(unfollowers);
+
+	[].slice.call(document.getElementsByClassName('_6e4x5')).forEach(function(element, index) { if (followers.indexOf(following[index]) > -1) { element.remove(); } })
+	document.getElementsByClassName('_lfwfo')[0].innerText = 'Not Following You'
+	document.getElementsByClassName('_lfwfo')[0].style.color = 'red'
 }
 
 function likeandnext(numberliked, maxlikes) { 

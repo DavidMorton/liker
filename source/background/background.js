@@ -97,6 +97,11 @@ chrome.runtime.onMessage.addListener(
 				tabId = tab.id;
 				runautomatically();
 			});
+		} else if (response.message == 'findUnfollowers') { 
+			chrome.tabs.getSelected(null, function(tab) { 
+				tabId = tab.id;
+				chrome.tabs.sendMessage(tabId, { action: 'findUnfollowers' }, function(response) { });
+			})
 		}
    });
 
@@ -126,6 +131,9 @@ function extractStatus(line) {
 			}, 5000);
 		}); 
 		
+	  } else if (status.code == '429') {
+		  console.log('too many requests!')
+		  chrome.tabs.sendMessage(tabId, { action: 'stopGettingUnfollowers' })
 	  }
 	},
 	{urls: ["<all_urls>"]}
