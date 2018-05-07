@@ -28,16 +28,27 @@ function numberBetween(min, max) {
 	return Math.floor(Math.random() * (max-min) + min);
 }
 
+var SAFE_DELAY = 1000; // Guaranteed not to fall asleep in this interval
+
+function setBusyTimeout(callback, delay) {
+  if(delay <= SAFE_DELAY) {
+    setTimeout(callback, delay);
+  } else {
+    var start = Date.now(); // setTimeout drifts, this prevents accumulation
+    setTimeout(
+      function() {
+        setBusyTimeout(callback, delay - (Date.now() - start));
+      }, SAFE_DELAY
+    );
+  }
+}
+
 function runautomatically() { 
 	if (parseInt(new Date().toString().split(' ')[4].split(':')[0]) > 22) { 
 		// wait for about 8 hours or so....
 		let waitTime = numberBetween(60*6*1000, 60*8*1000);
 
-		chrome.alarms.create('runAutomatically', { 
-			delayInMinutes: (waitTime / 1000) / 60
-		})
-
-		//setTimeout(function() { runAutomatically() }, waitTime);
+		setBusyTimeout(function() { runautomatically() }, waitTime);
 		return;
 	}
 
@@ -47,37 +58,14 @@ function runautomatically() {
 	chrome.tabs.update( tabId, { url: exploreUrl } , function() {
 		console.log('updated tab.');
 
-		chrome.alarms.create('startliking', {
-			delayInMinutes: 5.0/60
-		})
-
-		// setTimeout(function() { 
-		// 	console.log('sending message to the browser to continue liking.');
-		// 	numberliked = 0;
-		// 	maxlikes = numberBetween(75, 125);
-		// 	chrome.tabs.sendMessage(tabId, {action: "continueliking", numberliked: numberliked, maxlikes: maxlikes }, function(response) {});  
-		// }, 5000);
-	});
-}
-
-chrome.alarms.onAlarm.addListener(function(alarm) {
-	switch (alarm.name) { 
-		case 'runAutomatically': 
-			runautomatically();
-			break;
-		case 'startliking': 
+		setBusyTimeout(function() { 
 			console.log('sending message to the browser to continue liking.');
 			numberliked = 0;
 			maxlikes = numberBetween(75, 125);
-			chrome.tabs.sendMessage(tabId, {action: "continueliking", numberliked: numberliked, maxlikes: maxlikes }, function(response) {}); 
-			break; 
-		case 'continueliking': 
-			console.log('sending message to the browser to continue liking.');
 			chrome.tabs.sendMessage(tabId, {action: "continueliking", numberliked: numberliked, maxlikes: maxlikes }, function(response) {});  
-			break;
-	}
-})
-
+		}, 5000);
+	});
+}
 
 chrome.runtime.onMessage.addListener(
 	function(response, sender) {
@@ -99,10 +87,8 @@ chrome.runtime.onMessage.addListener(
 				let nextRun = numberBetween(45*60*1000, 75*60*1000);
 				let date = new Date(new Date().valueOf() + nextRun).toString().split(' ')[4];
 				chrome.tabs.sendMessage(tabId, {action: "nextrun", lastcount: response.numberliked, nextruntime: date }, function(response) {}); 
-				chrome.alarms.create('runAutomatically', {
-					delayInMinutes: (nextRun / 1000) / 60
-				}) 
-				//setTimeout(function() { runautomatically() }, nextRun);
+
+				setBusyTimeout(function() { runautomatically() }, nextRun);
 			}
 		} else if (response.message == 'autorun') { 
 			autolike = true;
@@ -133,13 +119,11 @@ function extractStatus(line) {
 		  console.log('status was 404.... going back and continuing.');
 		chrome.tabs.update( tabId, { url: exploreUrl } , function() {
 			console.log('updated tab.');
-			chrome.alarms.create('continueliking', {
-				delayInMinutes: 5.0/60
-			})
 
-			// setTimeout(function() { 
-				
-			// }, 5000);
+			setBusyTimeout(function() { 
+				console.log('sending message to the browser to continue liking.');
+				chrome.tabs.sendMessage(tabId, {action: "continueliking", numberliked: numberliked, maxlikes: maxlikes }, function(response) {});  
+			}, 5000);
 		}); 
 		
 	  }

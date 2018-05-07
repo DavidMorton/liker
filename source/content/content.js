@@ -1,5 +1,6 @@
 var maxtolike = 2;
-
+var skipsBeforeGivingUp = 10;
+var skipped = 0;
 
 chrome.runtime.onMessage.addListener(function(response) { 
 	if (response.action == 'continueliking') {
@@ -34,7 +35,11 @@ function likeandnext(numberliked, maxlikes) {
 	if (likeButton && numberBetween(1, 8) != 5) { 
 		 likeButton.click(); 
 		 numberliked = numberliked + 1; 
-	} 
+		 skipped = 0;
+	} else if (!likeButton) { 
+		skipped = skipped + 1;
+		numberLiked = maxlikes + 1;
+	}
 
 	if (numberliked > maxlikes) {
 		document.title = 'DONE!'

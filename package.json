@@ -1,0 +1,25 @@
+{
+  "name": "instalike",
+  "version": "1.0.0",
+  "description": "Auto-Liker for Instagram",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/DavidMorton/liker.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/DavidMorton/liker/issues"
+  },
+  "homepage": "https://github.com/DavidMorton/liker#readme",
+  "dependencies": {
+    "@angular/core": "^6.0.0",
+    "jquery": "^3.3.1",
+    "rxjs": "^6.1.0",
+    "zone.js": "^0.8.26"
+  }
+}
