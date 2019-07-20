@@ -187,6 +187,22 @@ function addButton() {
 		maindiv.appendChild(div);
 	}
 
+	let sharedDataSet = false;
+	setInterval(() => { 
+		if (document._sharedData && !sharedDataSet) { 
+			sharedDataSet = true;
+			let likeData = document._sharedData.entry_data.TagPage[0].graphql.hashtag.edge_hashtag_to_media.count + ',' + document._sharedData.entry_data.TagPage[0].graphql.hashtag.edge_hashtag_to_top_posts.edges.map(x => x.node).map(x => `${x.edge_liked_by.count},${x.edge_media_to_comment.count},${Math.round((new Date().valueOf() - (x.taken_at_timestamp * 1000))/1000/60)}`).join(',');
+
+			let input = document.createElement('input');
+			input.id = 'tagData';
+			input.style.width = 1;
+			input.style.height = 1;
+			input.value = likeData;
+			input.setAttribute('onClick', "this.setSelectionRange(0, this.value.length);document.execCommand('copy')");
+			maindiv.appendChild(input);
+		}
+	}, 1000);
+
 	let div = document.createElement('div');
 	div.style.margin = '10px';
 	div.style.padding = '8px';
@@ -214,6 +230,10 @@ setInterval(function() {
 	if (location.href != url) { 
 		url = location.href
 		addButton();
+
+		let sharedData = new Array(...document.scripts).filter(x => x.innerHTML.indexOf('_sharedData =')>-1);
+		let newScript = sharedData[0].innerHTML.replace('window._sharedData', 'document._sharedData');
+		eval(newScript);
 	}
 }, 1000)
 
@@ -224,4 +244,8 @@ document.addEventListener('DOMContentLoaded', function () {
 	for (var i = 0; i < buttons.length; i++) {
 		buttons[i].addEventListener('click', function() { sendMessage({message:'autorun'}); });
 	}
+
+	let sharedData = new Array(...document.scripts).filter(x => x.innerHTML.indexOf('_sharedData =')>-1);
+	let newScript = sharedData.innerHTML.replace('window._sharedData', 'document._sharedData');
+	eval(newScript);
 });
