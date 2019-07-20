@@ -9,6 +9,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
 	for (var i = 0; i < buttons.length; i++) {
 		let message = buttons[i].value;
-		buttons[i].addEventListener('click', function() { sendMessage({message:message}); });
+		buttons[i].addEventListener('click', function() { sendMessage({message:message}); window.close(); });
 	}
 });

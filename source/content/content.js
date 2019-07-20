@@ -101,7 +101,7 @@ function reconcileAll(result) {
 
 function likeandnext(numberliked, maxlikes) { 
 	sendMessage({message: 'numberliked', numberliked: numberliked, maxlikes: maxlikes});
-	document.title = numberliked + ' - ' + new Date().toString().split(' ')[4];
+	document.title = numberliked + '/' + maxlikes + ' - ' + new Date().toString().split(' ')[4];
 	let likeButton = document.getElementsByClassName('coreSpriteHeartOpen')[0];
 
 	// like about 7/8 items. 
