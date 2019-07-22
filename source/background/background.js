@@ -200,4 +200,6 @@ chrome.webNavigation.onHistoryStateUpdated.addListener(function(details) {
 
 		url = details.url;
 	}
+
+	chrome.tabs.sendMessage(tabId, {action: "reloadScripts" }, function(response) {});  
 }, {url: [{urlMatches : 'https://www.instagram.com/.*'}]});

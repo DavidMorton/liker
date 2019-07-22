@@ -18,6 +18,8 @@ chrome.runtime.onMessage.addListener(function(response) {
 		listAllFollowers();
 	} else if (response.action == 'stopGettingUnfollowers') {
 		received429 = true;
+	} else if (response.action === 'reloadScripts') { 
+		
 	}
 });
 
@@ -144,6 +146,8 @@ function like(maxtolike) {
 	setTimeout(function ()  {likeandnext(0, maxtolike), 1000 });
 }
 
+let maindiv;
+
 function addButton() { 
 
 	let previousDiv = document.getElementById('autorunDiv');
@@ -157,7 +161,7 @@ function addButton() {
 
 	var increments = [5, 10, 25, 50, 100, 250];
 
-	let maindiv = document.createElement('div');
+	
 	maindiv.style.position = 'fixed';
 	maindiv.style.top = '0px';
 	maindiv.style.left = '0px';
@@ -189,17 +193,9 @@ function addButton() {
 
 	let sharedDataSet = false;
 	setInterval(() => { 
-		if (document._sharedData && !sharedDataSet) { 
+		if (document._sharedData && !sharedDataSet && location.href.endsWith(document._sharedData.entry_data.TagPage["0"].graphql.hashtag.name + '/')) { 
 			sharedDataSet = true;
-			let likeData = document._sharedData.entry_data.TagPage[0].graphql.hashtag.edge_hashtag_to_media.count + ',' + document._sharedData.entry_data.TagPage[0].graphql.hashtag.edge_hashtag_to_top_posts.edges.map(x => x.node).map(x => `${x.edge_liked_by.count},${x.edge_media_to_comment.count},${Math.round((new Date().valueOf() - (x.taken_at_timestamp * 1000))/1000/60)}`).join(',');
-
-			let input = document.createElement('input');
-			input.id = 'tagData';
-			input.style.width = 1;
-			input.style.height = 1;
-			input.value = likeData;
-			input.setAttribute('onClick', "this.setSelectionRange(0, this.value.length);document.execCommand('copy')");
-			maindiv.appendChild(input);
+			
 		}
 	}, 1000);
 
@@ -227,18 +223,44 @@ function addButton() {
 let url = location.url;
 
 setInterval(function() { 
-	if (location.href != url) { 
+	if (location.href != url) {
+		sharedDataSet = false;
 		url = location.href
+
+		maindiv = document.createElement('div');
+		delete document._sharedData;
 		addButton();
+	} else if (location.href === url && !document._sharedData) { 
+		if (!location.href.match(/https:\/\/www\.instagram\.com\/explore\/.*/)) { 
+			return;
+		}
+	
+		
 
 		let sharedData = new Array(...document.scripts).filter(x => x.innerHTML.indexOf('_sharedData =')>-1);
 		let newScript = sharedData[0].innerHTML.replace('window._sharedData', 'document._sharedData');
 		eval(newScript);
+
+		if (!document._sharedData.entry_data.TagPage) { 
+			document._sharedData = null;
+			return;
+		}
+		
+		let likeData = document._sharedData.entry_data.TagPage[0].graphql.hashtag.edge_hashtag_to_media.count + ',' + document._sharedData.entry_data.TagPage[0].graphql.hashtag.edge_hashtag_to_top_posts.edges.map(x => x.node).map(x => `${x.edge_liked_by.count},${x.edge_media_to_comment.count},${Math.round((new Date().valueOf() - (x.taken_at_timestamp * 1000))/1000/60)}`).join(',');
+
+		let input = document.createElement('input');
+		input.id = 'tagData';
+		input.style.width = 1;
+		input.style.height = 1;
+		input.value = likeData;
+		input.setAttribute('onClick', "this.setSelectionRange(0, this.value.length);document.execCommand('copy')");
+		maindiv.appendChild(input);
 	}
 }, 1000)
 
 
 document.addEventListener('DOMContentLoaded', function () { 
+	alert('hahahaha')
 	var buttons = document.querySelectorAll('button');
 
 	for (var i = 0; i < buttons.length; i++) {
