@@ -4,6 +4,7 @@ var skipped = 0;
 var received429 = false;
 var CLASS_NAME_FOR_GRID_POST = '_9AhH0';
 var CLASS_NAME_FOR_HEART_BUTTON_WRAPPER = 'fr66n';
+var CLASS_NAME_FOR_FOCUSED_POST_FOR_DOUBLE_CLICK_USE = 'kPFhm';
 
 chrome.runtime.onMessage.addListener(function (response) {
 	if (response.action == 'continueliking') {
@@ -103,25 +104,52 @@ function reconcileAll(result) {
 	document.getElementsByClassName('_lfwfo')[0].style.color = 'red'
 }
 
-function likeandnext(numberliked, maxlikes) {
-	sendMessage({ message: 'numberliked', numberliked: numberliked, maxlikes: maxlikes });
-	document.title = numberliked + '/' + maxlikes + ' - ' + new Date().toString().split(' ')[4];
-	let likeButtonWrapper = document.getElementsByClassName(CLASS_NAME_FOR_HEART_BUTTON_WRAPPER)[0];
-	let likeButton = null;
-	if (likeButtonWrapper) { 
-		likeButton = likeButtonWrapper.firstElementChild;
+function likeandnext(numberliked, maxlikes, mechanic) {
+	if (!mechanic) { 
+		if (Math.random() < 0.5) { 
+			mechanic = 'doubleclick'
+		} else { 
+			mechanic = 'heart';
+		}
 	}
 
-	if (likeButton) { 
-		// Never 'unlike' items.
-		if (likeButton.firstElementChild && likeButton.firstElementChild.attributes['aria-label'].value === 'Unlike') { 
-			likeButton = null;
+	sendMessage({ message: 'numberliked', numberliked: numberliked, maxlikes: maxlikes });
+	document.title = numberliked + '/' + maxlikes + ' - ' + new Date().toString().split(' ')[4];
+
+	let likeButton = null;
+
+	if (mechanic === 'heart') { 
+		let likeButtonWrapper = document.getElementsByClassName(CLASS_NAME_FOR_HEART_BUTTON_WRAPPER)[0];
+		if (likeButtonWrapper) { 
+			likeButton = likeButtonWrapper.firstElementChild;
+		}
+
+		if (likeButton) { 
+			// Never 'unlike' items.
+			if (likeButton.firstElementChild && likeButton.firstElementChild.attributes['aria-label'].value === 'Unlike') { 
+				likeButton = null;
+			}
+		}
+	} else if (mechanic === 'doubleclick') { 
+		let likeButtonWrapper = document.getElementsByClassName(CLASS_NAME_FOR_FOCUSED_POST_FOR_DOUBLE_CLICK_USE)[0];
+		if (likeButtonWrapper) { 
+			likeButton = likeButtonWrapper.firstElementChild;
 		}
 	}
 
 	// like about 7/8 items. 
 	if (likeButton && numberBetween(1, 8) != 5) {
-		likeButton.click();
+		if (mechanic == 'heart') { 
+			likeButton.click();
+		} else if (mechanic === 'doubleclick') { 
+			var event = new MouseEvent('dblclick', {
+				'view': window,
+				'bubbles': true,
+				'cancelable': true
+			});
+			likeButton.dispatchEvent(event);
+		}
+
 		numberliked = numberliked + 1;
 		skipped = 0;
 	} else if (!likeButton) {
@@ -138,10 +166,18 @@ function likeandnext(numberliked, maxlikes) {
 	setTimeout(function () {
 		let rightArrow = document.getElementsByClassName('coreSpriteRightPaginationArrow')[0];
 
+		if (Math.random() < 0.1) { 
+			if (mechanic = 'heart') {
+				mechanic = 'doubleclick';
+			} else { 
+				mechanic = 'heart';
+			}
+		}
+
 		if (rightArrow) {
 			rightArrow.click();
 			setTimeout(function () {
-				likeandnext(numberliked, maxlikes);
+				likeandnext(numberliked, maxlikes, mechanic);
 			}, Math.floor(Math.random() * 3000 + 500));
 		} else {
 			document.title = 'ERROR!!!!';
@@ -206,6 +242,7 @@ function addButton() {
 
 		div.onclick = function () {
 			sendMessage({ message: 'liking', url: location.href });
+			increment = Math.round(increment + ((Math.random() * (increment/2))-(increment/4)))
 			like(increment);
 		}
 
