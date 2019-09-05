@@ -6,7 +6,6 @@ var CLASS_NAME_FOR_GRID_POST = '_9AhH0';
 var CLASS_NAME_FOR_HEART_BUTTON_WRAPPER = 'fr66n';
 var CLASS_NAME_FOR_FOCUSED_POST_FOR_DOUBLE_CLICK_USE = 'kPFhm';
 
-
 chrome.runtime.onMessage.addListener(function (response) {
 	if (response.action == 'continueliking') {
 		console.log('continuing to like...')
